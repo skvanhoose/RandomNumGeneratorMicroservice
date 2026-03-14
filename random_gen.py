@@ -7,7 +7,7 @@ import secrets
 app = FastAPI()
 
 # to test locally, add your port to origins list. Ex: http://localhost:<PORT>
-origins = ['http://localhost:4000']
+origins = ['http://localhost:4000','http://localhost:10000']
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,6 +25,8 @@ class NumRange(BaseModel):
     type: Literal["int", "hex", "jti"]
 
 
+# Generate random integer helper with user-specified limits,
+# or default values in case no upper_limit and/or lower_limit given
 async def gen_int(gen_random, lower_limit, upper_limit):
     if upper_limit is None:
         if lower_limit is None:
@@ -33,7 +35,6 @@ async def gen_int(gen_random, lower_limit, upper_limit):
             rand_int = secrets.randbelow(1000)
     else:
         if lower_limit:
-            print('here2')
             rand_int = gen_random.randint(lower_limit, upper_limit)
         else:
             rand_int = secrets.randbelow(upper_limit)
@@ -41,18 +42,21 @@ async def gen_int(gen_random, lower_limit, upper_limit):
     return rand_int
 
 
+# Generate random hex of default 16 bytes if not specified
 async def gen_hex(num_bytes):
     if not num_bytes:
         num_bytes = 16
     return secrets.token_hex(num_bytes)
 
 
+# Generate random URL-Safe token of default 32 bytes if not specified
 async def gen_token(num_bytes):
     if not num_bytes:
         num_bytes = 32
     return secrets.token_urlsafe(num_bytes)
 
 
+# POST - Generate and return random integer, hex, or url-safe token
 @app.post('/num-gen')
 async def gen_num(req: NumRange):
     gen_random = secrets.SystemRandom()
